@@ -2,8 +2,9 @@ FROM continuumio/miniconda3
 
 ENV ARGS=''
 
-RUN pip install nanome requests xmltodict
 RUN conda install -c openbabel openbabel
+RUN conda install -c rdkit rdkit
+RUN pip install nanome requests xmltodict
 
 COPY . /app
 WORKDIR /app
