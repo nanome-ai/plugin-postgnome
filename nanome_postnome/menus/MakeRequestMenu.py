@@ -158,6 +158,7 @@ class MakeRequestMenu():
 
             contexts = [self.field_values, results, self.settings.variables]
             response = self.get_response(resource, contexts, data)
+            print(f'response: {response}')
             var_name, first_var = self.settings.get_output_variable(resource, 0)
             if not response:
                 self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, f"Step {i} failed. Aborting {self.request['name']}")
