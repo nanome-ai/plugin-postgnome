@@ -2,7 +2,7 @@ FROM continuumio/miniconda3
 
 ENV ARGS=''
 
-RUN pip install nanome requests
+RUN pip install nanome requests xmltodict
 RUN conda install -c openbabel openbabel
 
 COPY . /app
