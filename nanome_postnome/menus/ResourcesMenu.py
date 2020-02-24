@@ -34,20 +34,19 @@ class ResourcesMenu():
 
     def rename_resource(self, resource, element, new_name):
         if self.settings.rename_resource(resource, new_name):
-            # self.config.refresh_resource_name()
-            if resource['references'].get(self.plugin.make_request.request.get('id')):
-                self.plugin.make_request.show_request()
+            if self.plugin.make_request.request:
+                if resource['references'].get(self.plugin.make_request.request.get('id')):
+                    self.plugin.make_request.show_request()
             return True
         return False
 
     def change_resource(self, resource, list_element, new_url):
-        print("resource:", resource)
-        print("resource['references']:", resource['references'])
         if resource and resource['references'] is not None:
             if self.settings.change_resource(resource, new_url=new_url):
                 self.config.refresh_resource_url()
-                if resource['references'].get(self.plugin.make_request.request.get('id')):
-                    self.plugin.make_request.show_request()
+                if self.plugin.make_request.request:
+                    if resource['references'].get(self.plugin.make_request.request.get('id')):
+                        self.plugin.make_request.show_request()
                 return True
         return False
 
