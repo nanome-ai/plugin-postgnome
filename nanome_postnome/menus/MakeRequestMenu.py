@@ -105,15 +105,16 @@ class MakeRequestMenu():
         headers = dict(resource['headers'].values())
         headers = {self.contextualize(name, contexts):self.contextualize(value, contexts) for name,value in headers.items()}
         data = self.contextualize(data or resource['data'], contexts=contexts)
-        headers.update({'Content-Length': str(len(data))})
-        
+        if method == 'post':
+            headers.update({'Content-Length': str(len(data))})
+        elif headers.get('Content-Length'):
+            del headers['Content-Length']
+
         print(f'load_url: {load_url}')
         print(f'method: {method}')
         print(f"headers: {headers}")
         print(f"data: {data}")
-
         print(f"contexts: {contexts}")
-
 
         try:
             if method == 'get':
@@ -144,7 +145,7 @@ class MakeRequestMenu():
         except:
             self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, f"Cannot load response as JSON")
         return None, None
-    
+
     def load_request(self, button=None):
         if not self.request:
             self.plugin.send_notification(nanome.util.enums.NotificationTypes.message, "Please select a request")
@@ -173,7 +174,7 @@ class MakeRequestMenu():
                 self.set_load_enabled(True)
                 return
             results[f'step{i+1}'] = json.dumps(first_var) or response.text
-            if import_type: 
+            if import_type:
                 import_name = self.contextualize(variable=resource['import name'], contexts=contexts)
                 self.import_to_nanome(import_name, import_type, first_var or response.text, metadata)
         self.set_load_enabled(True)

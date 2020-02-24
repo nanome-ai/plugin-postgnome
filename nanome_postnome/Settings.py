@@ -156,14 +156,12 @@ class Settings():
                 return var_name, value
         return None
 
-    def add_resource(self, name='', url='', method='get', import_type=None, headers=None, data=''):
+    def add_resource(self, name='', url='', method='get', import_type=None, headers={'Content-Type':'text/plain'}, data=''):
         name = name or f'Resource {len(self.resource_ids)+1}'
         inputs = self.vars_in_string(url)
         r_id = str(uuid.uuid1())
         while r_id in self.resource_ids:
             r_id = str(uuid.uuid1())
-        if not headers:
-            headers = {r_id: ['Content-Type','text/plain']}
         if r_id not in self.resource_ids:
             self.resource_ids.append(r_id)
             self.resources[r_id] = {
@@ -176,12 +174,15 @@ class Settings():
                 'import name': '',
                 'import type': import_type,
                 'header ids': [],
-                'headers': headers,
+                'headers': {},
                 'output': "",
                 'output variables': {},
                 'data': data,
                 'references': {}
             }
+        for h_name, h_value in headers.items():
+            self.add_header(self.resources[r_id], h_name, h_value)
+
         return self.resources[r_id]
 
     def get_resource(self, ri):
@@ -236,6 +237,7 @@ class Settings():
         return True
 
     def delete_header(self, resource, header_id):
+        print(f"Settings::delete_headers: resource header ids: {resource['header ids']}")
         if not header_id in resource['header ids']:
             self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, "Header does not exist in settings")
             return False
