@@ -106,11 +106,20 @@ class MakeRequestMenu():
         headers = {self.contextualize(name, contexts):self.contextualize(value, contexts) for name,value in headers.items()}
         data = self.contextualize(data or resource['data'], contexts=contexts)
         headers.update({'Content-Length': str(len(data))})
+        
+        print(f'load_url: {load_url}')
+        print(f'method: {method}')
+        print(f"headers: {headers}")
+        print(f"data: {data}")
+
+        print(f"contexts: {contexts}")
+
 
         try:
             if method == 'get':
                 # TODO test to make sure headers work
                 response = self.session.get(load_url, headers=headers, proxies=self.proxies, verify=False)
+                print(f"response: {response}")
             elif method == 'post':
                 if 'Content-Type' not in headers:
                     headers['Content-Type'] = 'text/plain'
@@ -158,7 +167,6 @@ class MakeRequestMenu():
 
             contexts = [self.field_values, results, self.settings.variables]
             response = self.get_response(resource, contexts, data)
-            print(f'response: {response}')
             var_name, first_var = self.settings.get_output_variable(resource, 0)
             if not response:
                 self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, f"Step {i} failed. Aborting {self.request['name']}")
