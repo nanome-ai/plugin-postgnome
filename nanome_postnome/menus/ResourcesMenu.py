@@ -41,11 +41,14 @@ class ResourcesMenu():
         return False
 
     def change_resource(self, resource, list_element, new_url):
-        if self.settings.change_resource(resource, new_url=new_url):
-            self.config.refresh_resource_url()
-            if resource['references'].get(self.plugin.make_request.request.get('id')):
-                self.plugin.make_request.show_request()
-            return True
+        print("resource:", resource)
+        print("resource['references']:", resource['references'])
+        if resource and resource['references'] is not None:
+            if self.settings.change_resource(resource, new_url=new_url):
+                self.config.refresh_resource_url()
+                if resource['references'].get(self.plugin.make_request.request.get('id')):
+                    self.plugin.make_request.show_request()
+                return True
         return False
 
     def add_resource(self, method, button = None):
