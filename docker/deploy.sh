@@ -8,4 +8,5 @@ docker run -d \
 --name nanome-postnome \
 --restart unless-stopped \
 -e ARGS="$*" \
+-v postnome-volume:/root \
 nanome-postnome
