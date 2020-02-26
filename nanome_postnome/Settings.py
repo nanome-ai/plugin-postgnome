@@ -176,6 +176,7 @@ class Settings():
                 'header ids': [],
                 'headers': {},
                 'output': "",
+                'output headers': {},
                 'output variables': {},
                 'data': data,
                 'references': {}

@@ -43,6 +43,9 @@ class MakeRequestMenu():
         self.btn_load = self.menu.root.find_node('Load Button').get_content()
         self.btn_load.register_pressed_callback(self.load_request)
 
+        self.host = os.environ["HOSTNAME"]
+        
+
     def open_menu(self):
         self.menu.enabled = True
         self.plugin.update_menu(self.menu)
@@ -101,6 +104,7 @@ class MakeRequestMenu():
 
     def get_response(self, resource, contexts, data=None):
         load_url = self.contextualize(variable=resource['url'], contexts=contexts)
+        if self.host: load_url = load_url.replace('localhost', self.host)
         method = resource['method'].lower()
         headers = dict(resource['headers'].values())
         headers = {self.contextualize(name, contexts):self.contextualize(value, contexts) for name,value in headers.items()}
@@ -110,22 +114,23 @@ class MakeRequestMenu():
         elif headers.get('Content-Length'):
             del headers['Content-Length']
 
-        print(f'load_url: {load_url}')
-        print(f'method: {method}')
-        print(f"headers: {headers}")
-        print(f"data: {data}")
-        print(f"contexts: {contexts}")
-
         try:
             if method == 'get':
                 # TODO test to make sure headers work
                 response = self.session.get(load_url, headers=headers, proxies=self.proxies, verify=False)
                 print(f"response: {response}")
+                print(f"response status code: {response.status_code}")
+                print(f"response text: {response.text}")
             elif method == 'post':
                 if 'Content-Type' not in headers:
                     headers['Content-Type'] = 'text/plain'
                 response = self.session.post(load_url, data=json.loads(data), proxies=self.proxies, verify=False)
         except:
+            print(f'load_url: {load_url}')
+            print(f'method: {method}')
+            print(f"headers: {headers}")
+            print(f"data: {data}")
+            print(f"contexts: {contexts}")
             exception = self.get_exception("An error occured while making the request")
             self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, f"{exception}")
             return None
@@ -252,6 +257,7 @@ class MakeRequestMenu():
 
     def get_exception(self, default_error, pattern=".*?([\w ]*Error:[\w ]*)"):
         exc = traceback.format_exc()
+        print(exc)
         exc_lines = re.findall(pattern, exc, re.MULTILINE)
         if not len(exc_lines) or len(exc_lines[0]) < 15:
             return default_error
