@@ -120,11 +120,12 @@ class MakeRequestMenu():
             if method == 'get':
                 # TODO test to make sure headers work
                 print("able to print before making the get request")
-                print('attempting to get ' + load_url)
+                self.plugin.send_notification('attempting to get ' + load_url)
+                Logs.message('url: ', load_url)
                 response = self.session.get(load_url, verify=False)
-                self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, f"{response}")
-                self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, f"{response.status_code}")
-                self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, f"{response.text}")
+                # self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, f"{response}")
+                # self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, f"{response.status_code}")
+                # self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, f"{response.text}")
                 # print(f"response: {response}")
                 # print(f"response status code: {response.status_code}")
                 # print(f"response text: {response.text}")
