@@ -44,7 +44,7 @@ class MakeRequestMenu():
         self.btn_load.register_pressed_callback(self.load_request)
 
         self.host = os.environ["HOSTNAME"]
-
+        
 
     def open_menu(self):
         self.menu.enabled = True
@@ -103,7 +103,7 @@ class MakeRequestMenu():
         return cvar
 
     def get_response(self, resource, contexts, data=None):
-        load_url = self.contextualize(variable=resource['url'], contexts=[self.settings.variables])
+        load_url = self.contextualize(variable=resource['url'], contexts=contexts)
         if self.host: load_url = load_url.replace('localhost', self.host)
         method = resource['method'].lower()
         headers = dict(resource['headers'].values())
@@ -120,12 +120,10 @@ class MakeRequestMenu():
             if method == 'get':
                 # TODO test to make sure headers work
                 print("able to print before making the get request")
-                self.plugin.send_notification('attempting to get ' + load_url)
-                Logs.message('url: ', load_url)
-                response = self.session.get(load_url, verify=False)
-                # self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, f"{response}")
-                # self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, f"{response.status_code}")
-                # self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, f"{response.text}")
+                response = self.session.get(load_url, headers=headers, proxies=self.proxies, verify=False)
+                self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, f"{response}")
+                self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, f"{response.status_code}")
+                self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, f"{response.text}")
                 # print(f"response: {response}")
                 # print(f"response status code: {response.status_code}")
                 # print(f"response text: {response.text}")
