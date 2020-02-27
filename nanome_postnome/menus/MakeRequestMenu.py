@@ -115,22 +115,32 @@ class MakeRequestMenu():
             del headers['Content-Length']
 
         try:
+            print("able to print before the method (get or post) check")
             if method == 'get':
                 # TODO test to make sure headers work
+                print("able to print before making the get request")
                 response = self.session.get(load_url, headers=headers, proxies=self.proxies, verify=False)
-                print(f"response: {response}")
-                print(f"response status code: {response.status_code}")
-                print(f"response text: {response.text}")
+                self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, f"{response}")
+                self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, f"{response.status_code}")
+                self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, f"{response.text}")
+                # print(f"response: {response}")
+                # print(f"response status code: {response.status_code}")
+                # print(f"response text: {response.text}")
             elif method == 'post':
                 if 'Content-Type' not in headers:
                     headers['Content-Type'] = 'text/plain'
                 response = self.session.post(load_url, data=json.loads(data), proxies=self.proxies, verify=False)
         except:
             print(f'load_url: {load_url}')
+            self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, f"{load_url}")
             print(f'method: {method}')
+            self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, f"{method}")
             print(f"headers: {headers}")
+            self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, f"{headers}")
             print(f"data: {data}")
+            self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, f"{data}")
             print(f"contexts: {contexts}")
+            self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, f"{contexts}")
             exception = self.get_exception("An error occured while making the request")
             self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, f"{exception}")
             return None
