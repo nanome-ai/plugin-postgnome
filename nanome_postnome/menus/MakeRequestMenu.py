@@ -103,7 +103,7 @@ class MakeRequestMenu():
         return cvar
 
     def get_response(self, resource, contexts, data=None):
-        load_url = self.contextualize(variable=resource['url'], contexts=contexts)
+        load_url = self.contextualize(variable=resource['url'], contexts=[self.settings.variables])
         if self.host: load_url = load_url.replace('localhost', self.host)
         method = resource['method'].lower()
         headers = dict(resource['headers'].values())
