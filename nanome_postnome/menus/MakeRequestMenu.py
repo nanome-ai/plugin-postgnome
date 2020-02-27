@@ -44,7 +44,7 @@ class MakeRequestMenu():
         self.btn_load.register_pressed_callback(self.load_request)
 
         self.host = os.environ["HOSTNAME"]
-        
+
 
     def open_menu(self):
         self.menu.enabled = True
@@ -120,6 +120,7 @@ class MakeRequestMenu():
             if method == 'get':
                 # TODO test to make sure headers work
                 print("able to print before making the get request")
+                print('attempting to get ' + load_url)
                 response = self.session.get(load_url, verify=False)
                 self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, f"{response}")
                 self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, f"{response.status_code}")
