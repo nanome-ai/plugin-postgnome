@@ -84,6 +84,9 @@ class RequestConfigurationMenu():
             el.set_resource_placeholder("Metadata source ({{step1}})")
             el.set_tooltip('Override post data during request')
             self.lst_steps.items.append(el)
+            name = request['name']
+            self.menu.title = f"{name} {'Configuration' if len(name) < 16 else 'Config'}"
+            self.plugin.update_menu(self.menu)
 
     def add_step(self, button):
         step_name = f'Step {self.step_i}'

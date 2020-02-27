@@ -66,10 +66,14 @@ class ResourceConfigurationMenu():
         self.resource = resource
         self.inp_resource_url.input_text = resource['url']
         self.inp_import_name.input_text = resource['import name']
+        self.inp_import_content.input_text = resource['import content']
         self.update_request_type()
         self.set_headers(resource['headers'])
         self.update_import_type()
         self.inp_post_data.input_text = resource['data']
+        name = resource['name']
+        self.menu.title = f"{name} {'Configuration' if len(name) < 16 else 'Config'}"
+        self.plugin.update_menu(self.menu)
 
     def refresh_resource_url(self):
         if self.resource:
