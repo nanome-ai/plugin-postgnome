@@ -120,14 +120,12 @@ class MakeRequestMenu():
             Logs.debug(f"load url: {load_url}")
             if method == 'get':
                 # TODO test to make sure headers work
-                Logs.debug("able to print before making the get request")
                 response = self.session.get(load_url, headers=headers, proxies=self.proxies, verify=False)
             elif method == 'post':
                 if 'Content-Type' not in headers:
                     headers['Content-Type'] = 'text/plain'
                 response = self.session.post(load_url, data=json.loads(data), proxies=self.proxies, verify=False)
         except:
-            Logs.debug(f'load_url: {load_url}')
             self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, f"{load_url}")
             exception = self.get_exception("An error occured while making the request")
             self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, f"{exception}")
@@ -167,7 +165,6 @@ class MakeRequestMenu():
                 data = self.fields[data_override_field_name]
 
             contexts = [self.fields, results, self.settings.variables]
-            Logs.debug(f"VARIABLES: {self.settings.variables}")
             response = self.get_response(resource, contexts, data)
             var_name, first_var = self.settings.get_output_variable(resource, 0)
             if not response:

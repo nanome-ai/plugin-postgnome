@@ -74,14 +74,8 @@ class Settings():
         for m in re.finditer('{{(.*?)}}', string):
             replacement = None
             for context in contexts:
-                Logs.debug('----------------------------------------')
-                Logs.debug(f'context: {context}')
-                Logs.debug('----------------------------------------')
-                Logs.debug(f'match is {m.group(0)}')
                 replacement = context.get(m.group(1))
-                Logs.debug(f'{m.group(0)} replacement is {replacement}')
                 if replacement: break
-            Logs.debug(f'{m.group(1)}:={replacement}')
             if not replacement:
                 missing_vars.append(m.group(1))
                 replacement = default_value
@@ -245,7 +239,6 @@ class Settings():
         return True
 
     def delete_header(self, resource, header_id):
-        Logs.debug(f"Settings::delete_headers: resource header ids: {resource['header ids']}")
         if not header_id in resource['header ids']:
             self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, "Header does not exist in settings")
             return False
