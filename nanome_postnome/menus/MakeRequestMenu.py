@@ -108,6 +108,7 @@ class MakeRequestMenu():
         method = resource['method'].lower()
         headers = dict(resource['headers'].values())
         headers = {self.contextualize(name, contexts):self.contextualize(value, contexts) for name,value in headers.items()}
+        print(f"headers: {headers}")
         data = self.contextualize(data or resource['data'], contexts=contexts)
         if method == 'post':
             headers.update({'Content-Length': str(len(data))})
