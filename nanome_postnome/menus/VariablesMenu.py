@@ -1,4 +1,5 @@
 import nanome
+from nanome.util import Logs
 from functools import partial
 
 from ..components import ListElement, ValueDisplayType
@@ -56,12 +57,13 @@ class VariablesMenu():
                 renamed=self.rename_variable,
                 revalued=self.change_variable_value,
             )
+            el.set_resource_placeholder("variable value")
             el.set_renameable(False)
             el.set_configurable(False)
             self.lst_vars.items.append(el)
         self.plugin.update_content(self.lst_vars)
 
-    def create_variable(self, list_element, text_input):
+    def create_variable(self, text_input):
         var_name = self.new_variable_name()
         self.settings.touch_variables([name])
         delete = partial(self.delete_variable)
@@ -93,8 +95,8 @@ class VariablesMenu():
     
     def change_variable_value(self, list_element, new_value):
         self.settings.set_variable(list_element.name, new_value)
-        print("variable is now...")
-        print(self.settings.get_variable(list_element.name))
+        Logs.debug("variable is now...")
+        Logs.debug(self.settings.get_variable(list_element.name))
         return True
 
     def delete_variable(self, list_element):

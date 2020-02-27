@@ -58,14 +58,14 @@ class ResponseConfigurationMenu():
           if response:
             self.response = response
             self.settings.set_output(self.resource, self.response.text, dict(self.response.headers), override=False)
-            print("get_and_set_response::response:", response.text)
-            print("get_and_set_response::headers:", response.headers)
+            Logs.debug("get_and_set_response::response:", response.text)
+            Logs.debug("get_and_set_response::headers:", response.headers)
             response.raise_for_status()
           else:
-            print("response is none:", response)
+            Logs.debug("response is none:", response)
           return response
       except HTTPError as http_err:
-        print(response.text)
+        Logs.debug(response.text)
         self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, f"{response.text}")
         return None
     
@@ -73,14 +73,14 @@ class ResponseConfigurationMenu():
       return self.settings.get_response_object(self.resource)
 
     def show_hierarchy(self, button=None):
-      print('showing...')
+      Logs.debug('showing...')
       self.lst_response_elements.items = []
       self.get_and_set_response()
       response_object = self.settings.get_response_object(self.resource)
-      print(f'response object is {response_object}')
+      Logs.debug(f'response object is {response_object}')
       if not response_object:
         response_type = self.settings.get_response_type(self.resource)
-        print(f'response type is {response_type}')
+        Logs.debug(f'response type is {response_type}')
         self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, f"{response_type} content not supported")
 
       self.response_setup.enabled = False
@@ -130,6 +130,7 @@ class ResponseConfigurationMenu():
       ln_var_name.forward_dist = 0.02
       inp_var_name = ln_var_name.add_new_text_input()
       inp_var_name.placeholder_text = 'variable name'
+      inp_var_name.max_length = 0
       inp_var_name.max_length = 24
       inp_var_name.register_changed_callback(self.set_output_variable)
 
@@ -159,8 +160,8 @@ class ResponseConfigurationMenu():
       self.variable_confirm.enabled = True
       self.plugin.update_menu(self.variable_confirm)
 
-      print(f'Are you sure you want to create a variable for {button.name}?')
-      print(f'variable path: {button.json_path}')
+      Logs.debug(f'Are you sure you want to create a variable for {button.name}?')
+      Logs.debug(f'variable path: {button.json_path}')
 
     def setup_variable_config(self):
       self.response_setup.root.clear_children()

@@ -7,6 +7,7 @@ import traceback
 from functools import partial, reduce
 
 import nanome
+from nanome.util import Logs
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))
 MENU_PATH = os.path.join(BASE_PATH, 'menus', 'json', 'Settings.json')
 OFF_ICON_PATH = os.path.join(BASE_PATH, 'assets', 'icons', 'off.png')
@@ -26,7 +27,7 @@ class Settings():
         self.__settings = {}
 
         self.__settings_path = os.path.normpath(os.path.join(plugin.plugin_files_path, 'postnome', 'settings.json'))
-        print(f'settings: {self.__settings_path}')
+        Logs.debug(f'settings: {self.__settings_path}')
         if not os.path.exists(os.path.dirname(self.__settings_path)):
             os.makedirs(os.path.dirname(self.__settings_path))
         self.load_settings()
@@ -62,24 +63,30 @@ class Settings():
             fields.update(self.vars_in_string(string))
         return fields
 
-    def try_contextualize(self, string, contexts=[], add_to_context=True, default_value="", left_wrapper="", right_wrapper=""):
+    def try_contextualize(self, string, contexts=[], add_to_context=False, default_value="", left_wrapper="", right_wrapper=""):
         bstring = bytearray(string, 'utf-8')
         bleft_wrapper = bytearray(left_wrapper, 'utf-8')
         bright_wrapper = bytearray(right_wrapper, 'utf-8')
         delta = 0
         if not contexts:
-            contexts = self.variables
+            contexts = [self.variables]
         missing_vars = []
         for m in re.finditer('{{(.*?)}}', string):
             replacement = None
             for context in contexts:
+                Logs.debug('----------------------------------------')
+                Logs.debug(f'context: {context}')
+                Logs.debug('----------------------------------------')
+                Logs.debug(f'match is {m.group(0)}')
                 replacement = context.get(m.group(1))
+                Logs.debug(f'{m.group(0)} replacement is {replacement}')
                 if replacement: break
+            Logs.debug(f'{m.group(1)}:={replacement}')
             if not replacement:
-                missing_vars.append(m.group(0))
+                missing_vars.append(m.group(1))
                 replacement = default_value
                 if add_to_context:
-                    context[m.group(0)] = replacement
+                    context[m.group(1)] = replacement
             full_replacement = bleft_wrapper + bytearray(replacement, 'utf-8') + bright_wrapper
             bstring[m.start()+delta:m.end()+delta] = full_replacement
             delta += len(full_replacement) - len(m.group(0))
@@ -134,7 +141,7 @@ class Settings():
                 coerced_response = json.loads('{ "root": '+ response_text + '}')
         except:
             exc = traceback.format_exc()
-            print(exc)
+            Logs.debug(exc)
             return {}
         return coerced_response
 
@@ -238,7 +245,7 @@ class Settings():
         return True
 
     def delete_header(self, resource, header_id):
-        print(f"Settings::delete_headers: resource header ids: {resource['header ids']}")
+        Logs.debug(f"Settings::delete_headers: resource header ids: {resource['header ids']}")
         if not header_id in resource['header ids']:
             self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, "Header does not exist in settings")
             return False

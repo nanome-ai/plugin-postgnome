@@ -30,8 +30,8 @@ class MakeRequestMenu():
         self.menu.index = 0
         self.plugin = plugin
         self.settings = settings
-        self.field_names = set()
-        self.field_values = {}
+        self.variables = set()
+        self.fields = {}
 
         self.request = None
         self.tempdir = tempfile.TemporaryDirectory()
@@ -56,10 +56,10 @@ class MakeRequestMenu():
             self.plugin.update_menu(self.menu)
             return
 
-        self.field_names = self.settings.get_variables(self.request)
-        self.field_values = {name:self.field_values.get(name, '') for name in self.field_names}
-        for field_name, default_value in self.field_names.items():
-            field_value = self.field_values[field_name]
+        self.variables = self.settings.get_variables(self.request)
+        self.fields = {name:self.fields.get(name, '') for name in self.variables}
+        for var_name, default_value in self.variables.items():
+            field_value = self.fields[var_name]
             ln = nanome.ui.LayoutNode()
             ln.sizing_type = nanome.util.enums.SizingTypes.ratio
             ln.sizing_value = 0.25
@@ -67,7 +67,7 @@ class MakeRequestMenu():
             ln.set_padding(top=0.01, down=0.01, left=0.01, right=0.01)
 
             ln_label = ln.create_child_node()
-            label = ln_label.add_new_label(field_name+':')
+            label = ln_label.add_new_label(var_name+':')
             label.text_max_size = 0.4
             label.text_vertical_align = nanome.util.enums.VertAlignOptions.Middle
 
@@ -75,31 +75,32 @@ class MakeRequestMenu():
             ln_field.forward_dist = 0.02
             ln_field.set_padding(top=0.01, down=0.01, left=0.01, right=0.01)
             text_input = ln_field.add_new_text_input()
+            text_input.max_length = 0
             text_input.input_text = field_value
             text_input.placeholder_text = default_value
             text_input.max_length = 64
-            text_input.register_changed_callback(partial(self.field_changed, field_name))
-            text_input.register_submitted_callback(partial(self.clean_field, field_name, True))
+            text_input.register_changed_callback(partial(self.field_changed, var_name))
+            text_input.register_submitted_callback(partial(self.clean_field, var_name, True))
             self.__ln_fields.add_child(ln)
         self.__ln_fields.create_child_node()
         self.plugin.update_menu(self.menu)
 
-    def field_changed(self, field_name, text_input):
-        self.field_values[field_name] = text_input.input_text
-        self.settings.set_variable(field_name, text_input.input_text)
+    def field_changed(self, var_name, text_input):
+        self.fields[var_name] = text_input.input_text
 
     def clean_field(self, name, update=False, text_input=None):
-        value = text_input.input_text if text_input else self.field_values[name]
-        self.field_values[name] = re.sub('([^0-9A-z-._~{}$])', '', value)
-        self.settings.set_variable(name, value)
-        self.plugin.update_node(self.__ln_fields)
+        pass
+        # value = text_input.input_text if (text_input and text_input.input_text) else self.fields[name]
+        # if value:
+        #     self.settings.set_variable(name, value)
+        #     self.plugin.update_node(self.__ln_fields)
 
     def set_load_enabled(self, enabled):
         self.btn_load.unusable = not enabled
         self.plugin.update_content(self.btn_load)
 
     def contextualize(self, variable, contexts, left_wrapper="", right_wrapper=""):
-        cvar, _ = self.settings.try_contextualize(variable, contexts, add_to_context=True, default_value="[missing]", left_wrapper=left_wrapper, right_wrapper=right_wrapper)
+        cvar, _ = self.settings.try_contextualize(variable, contexts, add_to_context=True, default_value="", left_wrapper=left_wrapper, right_wrapper=right_wrapper)
         return cvar
 
     def get_response(self, resource, contexts, data=None):
@@ -108,7 +109,7 @@ class MakeRequestMenu():
         method = resource['method'].lower()
         headers = dict(resource['headers'].values())
         headers = {self.contextualize(name, contexts):self.contextualize(value, contexts) for name,value in headers.items()}
-        print(f"headers: {headers}")
+        Logs.debug(f"headers: {headers}")
         data = self.contextualize(data or resource['data'], contexts=contexts)
         if method == 'post':
             headers.update({'Content-Length': str(len(data))})
@@ -116,32 +117,18 @@ class MakeRequestMenu():
             del headers['Content-Length']
 
         try:
-            print("able to print before the method (get or post) check")
+            Logs.debug(f"load url: {load_url}")
             if method == 'get':
                 # TODO test to make sure headers work
-                print("able to print before making the get request")
+                Logs.debug("able to print before making the get request")
                 response = self.session.get(load_url, headers=headers, proxies=self.proxies, verify=False)
-                self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, f"{response}")
-                self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, f"{response.status_code}")
-                self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, f"{response.text}")
-                # print(f"response: {response}")
-                # print(f"response status code: {response.status_code}")
-                # print(f"response text: {response.text}")
             elif method == 'post':
                 if 'Content-Type' not in headers:
                     headers['Content-Type'] = 'text/plain'
                 response = self.session.post(load_url, data=json.loads(data), proxies=self.proxies, verify=False)
         except:
-            print(f'load_url: {load_url}')
+            Logs.debug(f'load_url: {load_url}')
             self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, f"{load_url}")
-            print(f'method: {method}')
-            self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, f"{method}")
-            print(f"headers: {headers}")
-            self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, f"{headers}")
-            print(f"data: {data}")
-            self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, f"{data}")
-            print(f"contexts: {contexts}")
-            self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, f"{contexts}")
             exception = self.get_exception("An error occured while making the request")
             self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, f"{exception}")
             return None
@@ -167,9 +154,6 @@ class MakeRequestMenu():
             self.plugin.send_notification(nanome.util.enums.NotificationTypes.message, "Please select a request")
             return
 
-        for name in self.field_names:
-            self.clean_field(name)
-
         self.set_load_enabled(False)
         results = {}
         for i, step in enumerate(self.request['steps']):
@@ -180,9 +164,10 @@ class MakeRequestMenu():
             # override data if necessary
             data_override_field_name = f"{self.request['name']} {step['name']} data"
             if step['override_data']:
-                data = self.field_values[data_override_field_name]
+                data = self.fields[data_override_field_name]
 
-            contexts = [self.field_values, results, self.settings.variables]
+            contexts = [self.fields, results, self.settings.variables]
+            Logs.debug(f"VARIABLES: {self.settings.variables}")
             response = self.get_response(resource, contexts, data)
             var_name, first_var = self.settings.get_output_variable(resource, 0)
             if not response:
@@ -268,7 +253,7 @@ class MakeRequestMenu():
 
     def get_exception(self, default_error, pattern=".*?([\w ]*Error:[\w ]*)"):
         exc = traceback.format_exc()
-        print(exc)
+        Logs.debug(exc)
         exc_lines = re.findall(pattern, exc, re.MULTILINE)
         if not len(exc_lines) or len(exc_lines[0]) < 15:
             return default_error
