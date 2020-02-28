@@ -109,7 +109,6 @@ class MakeRequestMenu():
         method = resource['method'].lower()
         headers = dict(resource['headers'].values())
         headers = {self.contextualize(name, contexts):self.contextualize(value, contexts) for name,value in headers.items()}
-        Logs.debug(f"headers: {headers}")
         data = self.contextualize(data or resource['data'], contexts=contexts)
         if method == 'post':
             headers.update({'Content-Length': str(len(data))})
@@ -125,6 +124,7 @@ class MakeRequestMenu():
                 if 'Content-Type' not in headers:
                     headers['Content-Type'] = 'text/plain'
                 response = self.session.post(load_url, data=json.loads(data), proxies=self.proxies, verify=False)
+            self.settings.set_output(resource, response.text, dict(response.headers))
         except:
             self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, f"{load_url}")
             exception = self.get_exception("An error occured while making the request")
@@ -172,6 +172,8 @@ class MakeRequestMenu():
                 self.set_load_enabled(True)
                 return
             results[f'step{i+1}'] = json.dumps(first_var) or response.text
+            Logs.debug(f'setting {var_name} to {first_var}')
+            if var_name: self.settings.set_variable(var_name, first_var)
             if import_type:
                 import_name = self.contextualize(variable=resource['import name'], contexts=contexts)
                 self.import_to_nanome(import_name, import_type, first_var or response.text, metadata)
