@@ -43,7 +43,7 @@ class VariablesMenu():
 
     def refresh_vars(self):
         self.lst_vars.items = []
-        for var_name, var_value in self.settings.variables.items():
+        for var_id, (var_name, var_value) in self.settings.variables.items():
             el = ListElement(
                 self.plugin,
                 self.lst_vars,
@@ -57,6 +57,7 @@ class VariablesMenu():
                 renamed=self.rename_variable,
                 revalued=self.change_variable_value,
             )
+            el.var_id = var_id
             el.set_resource_placeholder("variable value")
             el.set_renameable(False)
             el.set_configurable(False)
@@ -65,7 +66,7 @@ class VariablesMenu():
 
     def create_variable(self, text_input):
         var_name = self.new_variable_name()
-        self.settings.touch_variables([name])
+        var_id = self.settings.touch_variable(var_name)
         delete = partial(self.delete_variable)
         el = ListElement(
             self.plugin,
@@ -80,25 +81,24 @@ class VariablesMenu():
             renamed=self.rename_variable,
             revalued=self.change_variable_value,
         )
+        el.var_id = var_id
         el.set_renameable(False)
         el.set_configurable(False)
-        self.lst_resources.items.append(el)
-        self.plugin.update_content(self.lst_resources)
+        self.lst_vars.items.append(el)
+        self.plugin.update_content(self.lst_vars)
 
-    # TODO go home and rethink the droids I'm looking for
     def rename_variable(self, list_element, text_input):
-        previous_name = list_element.name
-        # self.settings.rename_variable()
-        # go through every resource that uses this variable and change them
-        # (efficiently)
+        self.settings.set_variable(list_element.var_id, text_input.input_text)
+        Logs.debug("variable is now...")
+        Logs.debug(self.settings.get_variable_by_id(list_element.var_id))
         return True
     
     def change_variable_value(self, list_element, new_value):
-        self.settings.set_variable(list_element.name, new_value)
+        self.settings.set_variable(list_element.var_id, None, new_value)
         Logs.debug("variable is now...")
-        Logs.debug(self.settings.get_variable(list_element.name))
+        Logs.debug(self.settings.get_variable_by_id(list_element.var_id))
         return True
 
     def delete_variable(self, list_element):
-        self.settings.delete_variable(list_element.name)
+        self.settings.delete_variable_by_id(list_element.var_id)
         return True

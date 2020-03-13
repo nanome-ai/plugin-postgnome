@@ -22,7 +22,7 @@ class ResourcesMenu():
         self.btn_add_resource = self.menu.root.find_node('Add Resource').get_content()
         self.btn_add_resource.register_pressed_callback(partial(self.add_resource, 'get'))
 
-        self.resources = {}
+        self.resource_elements = {}
 
     def open_menu(self):
         self.refresh_resources()
@@ -70,19 +70,19 @@ class ResourcesMenu():
             config_opened=open_config
         )
         self.lst_resources.items.append(el)
-        self.resources[resource['id']] = el
+        self.resource_elements[resource['id']] = el
         self.plugin.update_content(self.lst_resources)
 
     def refresh_resources(self):
         self.lst_resources.items = []
-        self.resources = {}
+        self.resource_elements = {}
         for r_id, resource in self.settings.resources.items():
             name = resource['name']
             el = ListElement(
                 self.plugin,
                 self.lst_resources,
                 name,
-                resource['url'],
+                self.settings.get_resource_item(resource, 'url'),
                 None,
                 ValueDisplayType.Mutable,
                 False,
@@ -92,13 +92,13 @@ class ResourcesMenu():
                 revalued=partial(self.change_resource, resource),
                 config_opened=partial(self.config.open_menu, resource)
             )
-            self.resources[resource['id']] = el
+            self.resource_elements[resource['id']] = el
             self.lst_resources.items.append(el)
 
     def refresh_resource_name(self, resource):
-        el = self.resources.get(resource['id'])
+        el = self.resource_elements.get(resource['id'])
         if el: el.update_name(resource['name'])
 
     def refresh_resource_url(self, resource):
-        el = self.resources.get(resource['id'])
-        if el: el.update_value(resource['url'])
+        el = self.resource_elements.get(resource['id'])
+        if el: el.update_value(self.settings.get_resource_item(resource, 'url'))

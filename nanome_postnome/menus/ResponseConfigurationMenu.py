@@ -51,6 +51,9 @@ class ResponseConfigurationMenu():
       else:
         self.setup_variable_config()
 
+    def contextualize_response(self, response, contexts):
+      pass
+
     def get_and_set_response(self):
       try:
         if not self.response:
@@ -58,11 +61,12 @@ class ResponseConfigurationMenu():
           if response:
             self.response = response
             self.settings.set_output(self.resource, self.response.text, dict(self.response.headers), override=False)
-            Logs.debug("get_and_set_response::response:", response.text)
-            Logs.debug("get_and_set_response::headers:", response.headers)
+            # Logs.debug("get_and_set_response::response:", response.text)
+            # Logs.debug("get_and_set_response::headers:", response.headers)
             response.raise_for_status()
           else:
-            Logs.debug("response is none:", response)
+            # Logs.debug("response is none:", response)
+            pass
           return response
       except HTTPError as http_err:
         Logs.debug(response.text)
@@ -73,14 +77,14 @@ class ResponseConfigurationMenu():
       return self.settings.get_response_object(self.resource)
 
     def show_hierarchy(self, button=None):
-      Logs.debug('showing...')
+      # Logs.debug('showing...')
       self.lst_response_elements.items = []
       self.get_and_set_response()
       response_object = self.settings.get_response_object(self.resource)
-      Logs.debug(f'response object is {response_object}')
+      # Logs.debug(f'response object is {response_object}')
       if not response_object:
         response_type = self.settings.get_response_type(self.resource)
-        Logs.debug(f'response type is {response_type}')
+        # Logs.debug(f'response type is {response_type}')
         self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, f"{response_type} content not supported")
 
       self.response_setup.enabled = False
@@ -91,9 +95,11 @@ class ResponseConfigurationMenu():
       self.plugin.update_menu(self.menu)
       
     def draw_elements(self, obj, path=[]):
+      decontexts = [{'{{'+inp_id+'}}': [inp_n] for inp_id, [inp_n, inp_v] in self.settings.get_inputs(self.resource).items()}]
       if type(obj) is dict:
         for key, value in obj.items():
-          self.create_button(key, path) 
+          name_key = self.settings.decontextualize_string(key, decontexts)
+          self.create_button(name_key, path, name_key!=key)
           self.draw_elements(value, path+[key])
       elif type(obj) is list:
         for i, value in enumerate(obj):
@@ -102,7 +108,7 @@ class ResponseConfigurationMenu():
       else:
         self.create_button(str(obj), path)
 
-    def create_button(self, text, json_path=None):
+    def create_button(self, text, json_path=None, disabled=False):
       ln = nanome.ui.LayoutNode()
       ln.set_padding(left=(len(json_path))*0.1)
       btn = ln.add_new_button(text)
@@ -110,6 +116,7 @@ class ResponseConfigurationMenu():
       btn.json_path = json_path
       btn.text.horizontal_align = btn.HorizAlignOptions.Middle
       btn.register_pressed_callback(self.open_variable_setup)
+      btn.unusable = disabled
       self.lst_response_elements.items.append(ln)
 
     def open_variable_setup(self, button):
@@ -178,16 +185,18 @@ class ResponseConfigurationMenu():
       pfb.inp = ln_inp.add_new_text_input()
       pfb.inp.placeholder_text = "test value"
 
-      for name, value in self.settings.get_variables(self.resource).items():
+      for uid, (name, value) in self.settings.get_inputs(self.resource).items():
+        print(f"variable: {name}, value: {value}")
         pfb_var = pfb.clone()
         children = pfb_var.get_children()
-        lbl, inp = children[0], children[1]
-        lbl.get_content().text_value = name
-        inp.get_content().input_text = value
-        inp.get_content().register_changed_callback(partial(self.var_changed, name))
+        lbl, inp = children[0].get_content(), children[1].get_content()
+        lbl.text_value = name
+        inp.max_length = 0
+        inp.input_text = value
+        inp.register_changed_callback(partial(self.var_changed, uid))
         ls.items.append(pfb_var)
         pfb_var.forward_dist = 0.02
-      if len(ls.items) is 0:
+      if len(ls.items) == 0:
         self.response_setup.root.clear_children()
         self.response_setup.root.create_child_node().add_new_label('(Resource does not require parameters)')
       
@@ -196,8 +205,8 @@ class ResponseConfigurationMenu():
       self.response_setup.enabled = True
       self.plugin.update_menu(self.response_setup)
 
-    def var_changed(self, var_name, text_input):
-      self.settings.set_variable(var_name, text_input.input_text)
+    def var_changed(self, uid, text_input):
+      self.settings.set_variable(uid, None, text_input.input_text)
 
     def set_output_variable(self, text_input):
       self.variable_confirm.var_name = text_input.input_text
@@ -207,17 +216,25 @@ class ResponseConfigurationMenu():
       var_name = self.variable_confirm.var_name
       var_path = self.variable_confirm.var_path
       var_value = self.variable_confirm.var_value
-      if not self.settings.variables.get(var_name, None):
-        self.settings.set_output_var(self.resource, var_name, var_path, var_value)
-      else:
+      # TODO: Confirm working
+      if self.settings.get_variable_by_name(var_name):
         self.plugin.send_notification(nanome.util.enums.NotificationTypes.message, "Please choose a unique variable name")
         return
-
+      self.settings.set_output_variable(self.resource, None, var_name, var_path, var_value)
+      Logs.debug('var name:', var_name)
+      Logs.debug("output variables:", self.resource['output variables'])
+      decontextualized_output = self.settings.decontextualize_output(self.resource, json.loads(self.response.text))
+      Logs.debug("decontextualized output:")
+      Logs.debug(decontextualized_output)
+    
       # close variable confirm menu
       self.variable_confirm.enabled = False
       self.plugin.update_menu(self.variable_confirm)
-      self.menu.enabled = False
+      # redisplay the hierarchy with decontextualized output
+      self.show_hierarchy()
+      self.menu.enabled = True
       self.plugin.update_menu(self.menu)
+
       self.plugin.send_notification(nanome.util.enums.NotificationTypes.success, "{{"+var_name+"}}" + f' now defined by response from resource: {self.resource["name"]}')
 
 class Response:

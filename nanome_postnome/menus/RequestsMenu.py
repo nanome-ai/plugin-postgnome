@@ -61,8 +61,7 @@ class RequestsMenu():
     def set_active_request(self, list_element, toggled):
         for item in self.requests_list.items:
                 item.set_use_externally(item is list_element and not toggled, update=False)
-        self.plugin.make_request.request = self.settings.requests[list_element.r_id] if toggled else None
-        self.plugin.make_request.show_request()
+        self.plugin.make_request.set_request(self.settings.requests[list_element.r_id] if toggled else None)
         return True
 
     def refresh_requests(self):

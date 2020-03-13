@@ -30,7 +30,7 @@ class MakeRequestMenu():
         self.menu.index = 0
         self.plugin = plugin
         self.settings = settings
-        self.variables = set()
+        self.variables = None, [None, None]
         self.fields = {}
 
         self.request = None
@@ -43,12 +43,15 @@ class MakeRequestMenu():
         self.btn_load = self.menu.root.find_node('Load Button').get_content()
         self.btn_load.register_pressed_callback(self.load_request)
 
-        self.host = os.environ["HOSTNAME"]
-        
+        self.host = os.environ.get("HOSTNAME", None)
 
     def open_menu(self):
         self.menu.enabled = True
         self.plugin.update_menu(self.menu)
+    
+    def set_request(self, request):
+        self.request = request
+        self.show_request()
 
     def show_request(self):
         self.__ln_fields.clear_children()
@@ -56,9 +59,9 @@ class MakeRequestMenu():
             self.plugin.update_menu(self.menu)
             return
 
-        self.variables = self.settings.get_variables(self.request)
-        self.fields = {name:self.fields.get(name, '') for name in self.variables}
-        for var_name, default_value in self.variables.items():
+        self.variables = self.settings.get_inputs(self.request)
+        self.fields = {name:self.fields.get(name, '') for (name, value) in self.variables.values()}
+        for var_uid, (var_name, default_value) in self.variables.items():
             field_value = self.fields[var_name]
             ln = nanome.ui.LayoutNode()
             ln.sizing_type = nanome.util.enums.SizingTypes.ratio
@@ -100,10 +103,15 @@ class MakeRequestMenu():
         self.plugin.update_content(self.btn_load)
 
     def contextualize(self, variable, contexts, left_wrapper="", right_wrapper=""):
-        cvar, _ = self.settings.try_contextualize(variable, contexts, add_to_context=True, default_value="", left_wrapper=left_wrapper, right_wrapper=right_wrapper)
+        cvar = self.settings.contextualize(variable, contexts, add_to_context=True, default_value="", left_wrapper=left_wrapper, right_wrapper=right_wrapper)
         return cvar
 
     def get_response(self, resource, contexts, data=None):
+        """ Responsible for getting a response from a resource.
+            As this method calls settings.set_output,
+            It gives a response decontextualized from the resource's inputs
+            and will update the resource's output variables in the process.
+        """
         load_url = self.contextualize(variable=resource['url'], contexts=contexts)
         if self.host: load_url = load_url.replace('localhost', self.host)
         method = resource['method'].lower()
@@ -118,7 +126,6 @@ class MakeRequestMenu():
         try:
             Logs.debug(f"load url: {load_url}")
             if method == 'get':
-                # TODO test to make sure headers work
                 response = self.session.get(load_url, headers=headers, proxies=self.proxies, verify=False)
             elif method == 'post':
                 if 'Content-Type' not in headers:
@@ -132,25 +139,18 @@ class MakeRequestMenu():
             return None
 
         return response
-
-    def set_response_vars(self, resource, response_text):
-        json_response = None
-        try:
-            json_response = json.loads(response_text)
-            for var_name, var_path in resource['output variables'].items():
-                var_value = json_response
-                for path_part in var_path:
-                    var_value = var_value[path_part]
-                self.settings.set_variable(var_name, var_value)
-                return var_name, var_value
-        except:
-            self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, f"Cannot load response as JSON")
-        return None, None
+    
+    def save_fields_to_vars(self):
+        for name, value in self.fields.items():
+            if value:
+                self.settings.set_variable(None, name, value)
 
     def load_request(self, button=None):
         if not self.request:
             self.plugin.send_notification(nanome.util.enums.NotificationTypes.message, "Please select a request")
             return
+
+        self.save_fields_to_vars()
 
         self.set_load_enabled(False)
         results = {}
@@ -166,17 +166,16 @@ class MakeRequestMenu():
 
             contexts = [self.fields, results, self.settings.variables]
             response = self.get_response(resource, contexts, data)
-            var_name, first_var = self.settings.get_output_variable(resource, 0)
+            var_uid, var_value = self.settings.get_output_variable(resource, 0)
             if not response:
                 self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, f"Step {i} failed. Aborting {self.request['name']}")
                 self.set_load_enabled(True)
                 return
-            results[f'step{i+1}'] = json.dumps(first_var) or response.text
-            Logs.debug(f'setting {var_name} to {first_var}')
-            if var_name: self.settings.set_variable(var_name, first_var)
+            results[f'step{i+1}'] = json.dumps(var_value) or response.text
+            Logs.debug(f'setting step{i+1} to {var_value} ({self.settings.variables[var_uid][0]})')
             if import_type:
                 import_name = self.contextualize(variable=resource['import name'], contexts=contexts)
-                self.import_to_nanome(import_name, import_type, first_var or response.text, metadata)
+                self.import_to_nanome(import_name, import_type, var_value or response.text, metadata)
         self.set_load_enabled(True)
 
     def import_to_nanome(self, name, filetype, contents, metadata):
