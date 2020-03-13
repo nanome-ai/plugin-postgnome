@@ -147,9 +147,9 @@ class Settings():
             acc   --  An optional accumulator function that takes one argument: the uid of a variable found within string.
             This function will be called once per variable found in string.
         """
-        def uuid_gen(var_name, uid): 
+        def uuid_gen(var_name): 
             uid = self.touch_variable(var_name)
-            if acc is not None: acc(uid)
+            if acc is not None: acc(uid, var_name)
             return uid
         return self.contextualize(string, [self.variable_names], defaults_generator=uuid_gen, reporter=acc, left_wrapper="{{", right_wrapper="}}")
 
