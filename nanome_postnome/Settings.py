@@ -156,7 +156,7 @@ class Settings():
     def generate_varname_string(self, string, acc=None):
         def uuid_gen(uid, var_name):
             self.touch_variable(var_name, uid=uid)
-            if acc is not None: acc(uid)
+            if acc is not None: acc(uid, var_name)
             return uid
         return self.contextualize(string, defaults_generator=uuid_gen, reporter=acc, left_wrapper="{{", right_wrapper="}}", use_index=0)
 

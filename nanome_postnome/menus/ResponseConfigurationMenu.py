@@ -216,10 +216,6 @@ class ResponseConfigurationMenu():
       var_name = self.variable_confirm.var_name
       var_path = self.variable_confirm.var_path
       var_value = self.variable_confirm.var_value
-      # TODO: Confirm working
-      if self.settings.get_variable_by_name(var_name):
-        self.plugin.send_notification(nanome.util.enums.NotificationTypes.message, "Please choose a unique variable name")
-        return
       self.settings.set_output_variable(self.resource, None, var_name, var_path, var_value)
       Logs.debug('var name:', var_name)
       Logs.debug("output variables:", self.resource['output variables'])
