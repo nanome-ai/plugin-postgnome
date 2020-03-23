@@ -34,11 +34,14 @@ class ResponseConfigurationMenu():
         self.set_resource(resource)
 
     def refresh_response(self, button=None):
-      self.settings.set_output(self.resource, output="", output_headers={}, override=True)
+      self.settings.clear_output(self.resource)
       self.response = None
       self.menu.enabled = False
       self.plugin.update_menu(self.menu)
       self.setup_variable_config()
+
+    # def response_to_json(self, response):
+      
 
     def set_resource(self, resource):
       self.response = None
@@ -51,30 +54,18 @@ class ResponseConfigurationMenu():
       else:
         self.setup_variable_config()
 
-    def contextualize_response(self, response, contexts):
-      pass
-
     def get_and_set_response(self):
       try:
         if not self.response:
           response = self.plugin.make_request.get_response(self.resource, [self.settings.variables])
           if response:
-            self.response = response
-            self.settings.set_output(self.resource, self.response.text, dict(self.response.headers), override=False)
-            # Logs.debug("get_and_set_response::response:", response.text)
-            # Logs.debug("get_and_set_response::headers:", response.headers)
             response.raise_for_status()
-          else:
-            # Logs.debug("response is none:", response)
-            pass
+            self.response = Response(text=response.text, headers=response.headers, status_code=response.status_code)
           return response
       except HTTPError as http_err:
         Logs.debug(response.text)
         self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, f"{response.text}")
         return None
-    
-    def interpret_response(self):
-      return self.settings.get_response_object(self.resource)
 
     def show_hierarchy(self, button=None):
       # Logs.debug('showing...')
@@ -84,7 +75,6 @@ class ResponseConfigurationMenu():
       # Logs.debug(f'response object is {response_object}')
       if not response_object:
         response_type = self.settings.get_response_type(self.resource)
-        # Logs.debug(f'response type is {response_type}')
         self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, f"{response_type} content not supported")
 
       self.response_setup.enabled = False
@@ -95,12 +85,18 @@ class ResponseConfigurationMenu():
       self.plugin.update_menu(self.menu)
       
     def draw_elements(self, obj, path=[]):
-      decontexts = [{'{{'+inp_id+'}}': [inp_n] for inp_id, [inp_n, inp_v] in self.settings.get_inputs(self.resource).items()}]
+      inputs = self.settings.get_inputs(self.resource)
+      outputs = {uid:self.settings.variables[uid] for uid in self.resource['output variables'].keys()}
+      Logs.debug(outputs)
+      decontexti = [{inp_id: [inp_n] for inp_id, [inp_n, inp_v] in inputs.items()}]
+      decontexto = [{inp_id: [inp_n] for inp_id, [inp_n, inp_v] in outputs.items()}]
       if type(obj) is dict:
         for key, value in obj.items():
-          name_key = self.settings.decontextualize_string(key, decontexts)
+          name_key = self.settings.decontextualize_string(key, decontexti, left_wrapper='', right_wrapper='')
+          value_value = self.settings.decontextualize_string(value, decontexto, left_wrapper='', right_wrapper='')
+          Logs.debug(f"key:{key}, name_key:{name_key}")
           self.create_button(name_key, path, name_key!=key)
-          self.draw_elements(value, path+[key])
+          self.draw_elements(value_value, path+[key])
       elif type(obj) is list:
         for i, value in enumerate(obj):
           self.create_button(str(i), path)
@@ -171,6 +167,7 @@ class ResponseConfigurationMenu():
       Logs.debug(f'variable path: {button.json_path}')
 
     def setup_variable_config(self):
+      Logs.debug("testing...")
       self.response_setup.root.clear_children()
       ln = self.response_setup.root.create_child_node()
       ln.sizing_type = ln.SizingTypes.ratio

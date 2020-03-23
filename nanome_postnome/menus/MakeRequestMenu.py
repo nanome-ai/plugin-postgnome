@@ -8,6 +8,7 @@ from rdkit import Chem
 from rdkit.Chem import AllChem
 
 import json
+import xmltodict
 import requests
 import tempfile
 import traceback
@@ -106,6 +107,15 @@ class MakeRequestMenu():
         cvar = self.settings.contextualize(variable, contexts, add_to_context=True, default_value="", left_wrapper=left_wrapper, right_wrapper=right_wrapper)
         return cvar
 
+    def convert_to_json_string(self, response_text, response_type):
+        if 'json' in response_type:
+            coerced_response = response_text
+        elif 'xml' in response_type:
+            coerced_response = json.dumps(xmltodict.parse(response_text))
+        elif 'text' in response_type:
+            coerced_response = '{"root": '+ response_text + '}'
+        return coerced_response
+
     def get_response(self, resource, contexts, data=None):
         """ Responsible for getting a response from a resource.
             As this method calls settings.set_output,
@@ -131,10 +141,16 @@ class MakeRequestMenu():
                 if 'Content-Type' not in headers:
                     headers['Content-Type'] = 'text/plain'
                 response = self.session.post(load_url, data=json.loads(data), proxies=self.proxies, verify=False)
-            self.settings.set_output(resource, response.text, dict(response.headers))
+            
+            json_text = self.convert_to_json_string(response.text, response.headers.get('Content-Type', 'text/plain'))
+            Logs.debug("type of json_text loaded:", type(json.loads(json_text)))
+            setattr(response, '_content', bytes(json_text, 'utf-8'))
+            Logs.debug("response text:", response.text)
+            self.settings.set_output(resource, json_text, dict(response.headers))
+            Logs.debug(f"resource output vs json_text: {json_text == resource['output']}")
         except:
-            self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, f"{load_url}")
             exception = self.get_exception("An error occured while making the request")
+            Logs.debug(traceback.format_exc())
             self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, f"{exception}")
             return None
 
@@ -257,3 +273,7 @@ class MakeRequestMenu():
             return default_error
         else:
             return exc_lines[0]
+
+class Response:
+    def __init__(self, **kwds):
+        self.__dict__.update(kwds)

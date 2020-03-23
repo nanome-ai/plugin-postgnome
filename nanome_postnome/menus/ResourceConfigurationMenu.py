@@ -163,7 +163,7 @@ class ResourceConfigurationMenu():
     def set_resource_method(self, button=None):
         if self.resource:
             if self.resource['method'] != button.text.value.idle:
-                self.settings.set_output(self.resource, output="", output_headers={}, override=True)
+                self.settings.clear_output(self.resource, clear_headers=True)
                 self.resource['method'] = button.text.value.idle
                 self.update_request_type()
                 self.plugin.update_content(button)

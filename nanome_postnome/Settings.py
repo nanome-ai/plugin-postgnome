@@ -149,7 +149,7 @@ class Settings():
         """
         def uuid_gen(var_name): 
             uid = self.touch_variable(var_name)
-            if acc is not None: acc(uid, var_name)
+            if acc is not None: acc(var_name, uid)
             return uid
         return self.contextualize(string, [self.variable_names], defaults_generator=uuid_gen, reporter=acc, left_wrapper="{{", right_wrapper="}}")
 
@@ -216,6 +216,7 @@ class Settings():
     def decontextualize_string(self, string, contexts=[], left_wrapper="{{", right_wrapper="}}", use_index=0):
         for context in contexts:
             for var_value, var_names in context.items():
+                Logs.debug(f'replacing for {var_value}')
                 string = string.replace(var_value, left_wrapper+var_names[use_index]+right_wrapper)
         return string
 
@@ -223,21 +224,12 @@ class Settings():
         return resource['output headers'].get('Content-Type', 'text/unknown')
 
     def get_response_object(self, resource):
-        response_text = resource['output']
-        response_type = resource['output headers'].get('Content-Type', 'text/plain')
-        coerced_response = {}
-        try:
-            if 'json' in response_type:
-                coerced_response = json.loads(response_text)
-            elif 'xml' in response_type:
-                coerced_response = xmltodict.parse(response_text)
-            elif 'text' in response_type:
-                coerced_response = json.loads('{ "root": '+ response_text + '}')
-        except:
-            exc = traceback.format_exc()
-            Logs.debug(exc)
-            return {}
-        return coerced_response
+        if resource['output']:
+            Logs.debug(type(resource['output']))
+            response = json.loads(resource['output'])
+            Logs.debug(f'returning {type(response)}')
+            return response
+        return {}
 
     def get_output_variable(self, resource, out_id):
         """ Gets an output variable from a resource by an id
@@ -326,6 +318,7 @@ class Settings():
         rstr = partial(self.generate_resource_string, acc=uid_acc)
         if type(item) is str:
             value = rstr(item)
+            Logs.debug(f"resource string: {value}")
             resource[item_name] = value
         elif type(item) is list:
             value = {h_id: [rstr(h_n), rstr(h_v)] for h_id, [h_n, h_v] in item.values()}
@@ -338,7 +331,7 @@ class Settings():
 
     def change_resource(self, resource, new_url=None, new_headers={}, new_import_content=None, new_import_name=None, new_data=None):
         input_vars = set()
-        def acc(uid, name): input_vars.add(uid)
+        def acc(name, uid): input_vars.add(uid)
 
         if new_url is not None:
             input_vars.update(self.set_resource_item(resource, 'url', new_url))
@@ -408,15 +401,23 @@ class Settings():
         del resource['header ids'][i]
         del resource['headers'][header_id]
         return True
+    
+    def clear_output(self, resource, clear_headers=False):
+        resource['output'] = ""
+        if clear_headers:
+            resource['output headers'] = {}
 
     def set_output(self, resource, output, output_headers={}, override=True):
         """ Decontextualizes and sets the output for a resource
             and updates its output variables.
         """
+        # TODO: Fix flip flopping of variables (get rid of decontextualization here)
+        # and put it somewhere where it makes sense
+        # TODO: Finish with everything else
         if not resource['output'] or override:
             resource['output headers'] = output_headers
+            resource['output'] = output
             output = self.decontextualize_output(resource, json.loads(output))
-            resource['output'] = json.dumps(output)
             for uid, path in resource['output variables'].items():
                 value = output
                 for part in path:
@@ -425,13 +426,7 @@ class Settings():
                     self.set_variable(uid, None, value)
 
     def decontextualize_output(self, resource, output):
-        Logs.debug('input variables:')
-        Logs.debug(resource['input variables'])
-        for inp in resource['input variables']:
-            Logs.debug("variable name:")
-            Logs.debug(inp)
-            Logs.debug('variable value:')
-            Logs.debug(self.get_variable_by_id(inp))
+        if not output: return output
         contexti = {self.variables[uid][1]:[uid] for uid in resource['input variables']}
         contexto = {self.variables[uid][1]:[uid] for uid in resource['output variables']}
         output = self.decontextualize(output, [contexti], k_or_v=False)
