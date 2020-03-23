@@ -4,8 +4,11 @@ ENV ARGS=''
 
 RUN conda install -c openbabel openbabel
 RUN conda install -c rdkit rdkit
-RUN pip install nanome requests xmltodict
+RUN pip install requests xmltodict
 RUN apt-get install nano
+
+ARG CACHEBUST
+RUN pip install nanome
 
 COPY . /app
 WORKDIR /app

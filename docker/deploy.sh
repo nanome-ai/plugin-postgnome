@@ -1,5 +1,6 @@
+#!/bin/bash
+
 if [ "$(docker ps -aq -f name=nanome-postnome)" != "" ]; then
-    # cleanup
     echo "removing exited container"
     docker rm -f nanome-postnome
 fi
