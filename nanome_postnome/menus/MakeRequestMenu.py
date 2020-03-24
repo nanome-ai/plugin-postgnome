@@ -109,7 +109,7 @@ class MakeRequestMenu():
 
     def convert_to_json_string(self, response_text, response_type):
         if 'json' in response_type:
-            coerced_response = response_text
+            coerced_response = '{"root": '+ response_text + '}'
         elif 'xml' in response_type:
             coerced_response = json.dumps(xmltodict.parse(response_text))
         elif 'text' in response_type:
