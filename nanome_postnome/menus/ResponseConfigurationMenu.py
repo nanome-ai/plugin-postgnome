@@ -88,15 +88,18 @@ class ResponseConfigurationMenu():
       inputs = self.settings.get_inputs(self.resource)
       outputs = {uid:self.settings.variables[uid] for uid in self.resource['output variables'].keys()}
       Logs.debug(outputs)
-      decontexti = [{inp_id: [inp_n] for inp_id, [inp_n, inp_v] in inputs.items()}]
-      decontexto = [{inp_id: [inp_n] for inp_id, [inp_n, inp_v] in outputs.items()}]
+      decontexti =   [{inp_v: [inp_n] for inp_id, [inp_n, inp_v] in inputs.items()}]
+      decontextu = [{inp_v: [inp_id] for inp_id, [inp_n, inp_v] in inputs.items()}]
+      decontexto = [{inp_v: [inp_n] for inp_id, [inp_n, inp_v] in outputs.items()}]
       if type(obj) is dict:
         for key, value in obj.items():
-          name_key = self.settings.decontextualize_string(key, decontexti, left_wrapper='', right_wrapper='')
-          value_value = self.settings.decontextualize_string(value, decontexto, left_wrapper='', right_wrapper='')
+          name_key = self.settings.decontextualize_string(key, decontexti, left_wrapper='{{', right_wrapper='}}')
+          uid_key = self.settings.decontextualize_string(key, decontextu, left_wrapper='{{', right_wrapper='}}')
+          if type(value) is str:
+            value = self.settings.decontextualize_string(value, decontexto, left_wrapper='{{', right_wrapper='}}')
           Logs.debug(f"key:{key}, name_key:{name_key}")
           self.create_button(name_key, path, name_key!=key)
-          self.draw_elements(value_value, path+[key])
+          self.draw_elements(value, path+[uid_key])
       elif type(obj) is list:
         for i, value in enumerate(obj):
           self.create_button(str(i), path)
@@ -214,11 +217,7 @@ class ResponseConfigurationMenu():
       var_path = self.variable_confirm.var_path
       var_value = self.variable_confirm.var_value
       self.settings.set_output_variable(self.resource, None, var_name, var_path, var_value)
-      Logs.debug('var name:', var_name)
-      Logs.debug("output variables:", self.resource['output variables'])
       decontextualized_output = self.settings.decontextualize_output(self.resource, json.loads(self.response.text))
-      Logs.debug("decontextualized output:")
-      Logs.debug(decontextualized_output)
     
       # close variable confirm menu
       self.variable_confirm.enabled = False

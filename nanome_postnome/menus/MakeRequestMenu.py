@@ -143,11 +143,8 @@ class MakeRequestMenu():
                 response = self.session.post(load_url, data=json.loads(data), proxies=self.proxies, verify=False)
             
             json_text = self.convert_to_json_string(response.text, response.headers.get('Content-Type', 'text/plain'))
-            Logs.debug("type of json_text loaded:", type(json.loads(json_text)))
-            setattr(response, '_content', bytes(json_text, 'utf-8'))
-            Logs.debug("response text:", response.text)
-            self.settings.set_output(resource, json_text, dict(response.headers))
-            Logs.debug(f"resource output vs json_text: {json_text == resource['output']}")
+            response._content = bytes(json_text, 'utf-8')
+            self.settings.set_output(resource, response.text, dict(response.headers))
         except:
             exception = self.get_exception("An error occured while making the request")
             Logs.debug(traceback.format_exc())

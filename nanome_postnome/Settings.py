@@ -188,8 +188,6 @@ class Settings():
     def decontextualize(self, json, contexts=[], left_wrapper="{{", right_wrapper="}}", k_or_v=False):
         def replace(json, old, new, k_or_v=False):
             newd = {}
-            print("JSON:")
-            print(json)
             for k, v in json.items():
                 if k_or_v:
                     if v == old:
@@ -216,7 +214,6 @@ class Settings():
     def decontextualize_string(self, string, contexts=[], left_wrapper="{{", right_wrapper="}}", use_index=0):
         for context in contexts:
             for var_value, var_names in context.items():
-                Logs.debug(f'replacing for {var_value}')
                 string = string.replace(var_value, left_wrapper+var_names[use_index]+right_wrapper)
         return string
 
@@ -225,9 +222,7 @@ class Settings():
 
     def get_response_object(self, resource):
         if resource['output']:
-            Logs.debug(type(resource['output']))
             response = json.loads(resource['output'])
-            Logs.debug(f'returning {type(response)}')
             return response
         return {}
 
@@ -250,6 +245,7 @@ class Settings():
                 output_var_path = resource['output variables'][var_id]
                 value = self.get_response_object(resource)
                 for part in output_var_path:
+                    part = self.contextualize(part, defaults_generator=partial(self.touch_variable, ''))
                     value = value.get(part, None)
                     if value is None: break
                 return var_id, value
@@ -331,7 +327,7 @@ class Settings():
 
     def change_resource(self, resource, new_url=None, new_headers={}, new_import_content=None, new_import_name=None, new_data=None):
         input_vars = set()
-        def acc(name, uid): input_vars.add(uid)
+        def acc(uid, name): input_vars.add(uid)
 
         if new_url is not None:
             input_vars.update(self.set_resource_item(resource, 'url', new_url))
