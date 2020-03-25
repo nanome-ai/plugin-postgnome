@@ -15,6 +15,7 @@ import traceback
 
 import nanome
 from nanome.util import Logs
+from nanome.util.enums import LoadFileErrorCode
 from nanome.api.structure import Complex
 
 from . import ResourcesMenu
@@ -49,7 +50,7 @@ class MakeRequestMenu():
     def open_menu(self):
         self.menu.enabled = True
         self.plugin.update_menu(self.menu)
-    
+
     def set_request(self, request):
         self.request = request
         self.show_request()
@@ -84,20 +85,12 @@ class MakeRequestMenu():
             text_input.placeholder_text = default_value
             text_input.max_length = 64
             text_input.register_changed_callback(partial(self.field_changed, var_name))
-            text_input.register_submitted_callback(partial(self.clean_field, var_name, True))
             self.__ln_fields.add_child(ln)
         self.__ln_fields.create_child_node()
         self.plugin.update_menu(self.menu)
 
     def field_changed(self, var_name, text_input):
         self.fields[var_name] = text_input.input_text
-
-    def clean_field(self, name, update=False, text_input=None):
-        pass
-        # value = text_input.input_text if (text_input and text_input.input_text) else self.fields[name]
-        # if value:
-        #     self.settings.set_variable(name, value)
-        #     self.plugin.update_node(self.__ln_fields)
 
     def set_load_enabled(self, enabled):
         self.btn_load.unusable = not enabled
@@ -141,7 +134,7 @@ class MakeRequestMenu():
                 if 'Content-Type' not in headers:
                     headers['Content-Type'] = 'text/plain'
                 response = self.session.post(load_url, data=json.loads(data), proxies=self.proxies, verify=False)
-            
+
             json_text = self.convert_to_json_string(response.text, response.headers.get('Content-Type', 'text/plain'))
             response._content = bytes(json_text, 'utf-8')
             self.settings.set_output(resource, response.text, dict(response.headers))
@@ -152,7 +145,7 @@ class MakeRequestMenu():
             return None
 
         return response
-    
+
     def save_fields_to_vars(self):
         for name, value in self.fields.items():
             if value:
@@ -207,7 +200,7 @@ class MakeRequestMenu():
                     complex = nanome.structure.Complex.io.from_mmcif(path=file.name)
                     self.plugin.add_bonds([complex], partial(self.bonds_ready, name, metadata))
                 elif filetype == ".mol":
-                    self.plugin.send_files_to_load([file.name])
+                    self.plugin.send_files_to_load([file.name], partial(self.apply_residue_label, name))
                     # self.plugin.add_bonds([complex], partial(self.bonds_ready, name, metadata))
                 elif filetype == ".smi":
                     complex = self.complexFromSMILES(contents)
@@ -228,6 +221,24 @@ class MakeRequestMenu():
             self._loading = False
             exception = self.get_exception("Error while parsing")
             self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, f"Import failure. Have you configured the resource for {filetype} files?")
+
+    def apply_residue_label(self, name, error_code):
+        if error_code == LoadFileErrorCode.loading_failed:
+            self.plugin.send_notification(nanome.util.enums.NotificationTypes.error, "Failed to upload structure.")
+            return
+
+        def label_last_complex(complexes):
+            complex = complexes[-1]
+            for residue in complex.residues:
+                Logs.debug(residue.label_text)
+                residue.label_text = name
+                Logs.debug('name:', name)
+                Logs.debug(residue.label_text)
+            self.plugin.update_structures_deep([complex])
+        def request_and_label_last_complex(all_complexes):
+            self.plugin.request_complexes([all_complexes[-1].index], label_last_complex)
+
+        self.plugin.request_complex_list(request_and_label_last_complex)
 
     def complexFromSMILES(self, smiles):
         mol = Chem.MolFromSmiles(smiles)
