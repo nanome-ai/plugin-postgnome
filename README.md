@@ -1,4 +1,4 @@
-# Nanome - Postnome
+# Nanome - Postgnome
 
 A web request plugin for Nanome
 
@@ -24,18 +24,18 @@ $ python3 -m pip install nanome --upgrade
 
 ### Installation
 
-To install Postnome:
+To install Postgnome:
 
 ```sh
-$ python3 -m pip install nanome-postnome
+$ python3 -m pip install nanome-postgnome
 ```
 
 ### Usage
 
-To start Postnome:
+To start Postgnome:
 
 ```sh
-$ nanome-postnome -a <plugin_server_address> [optional args]
+$ nanome-postgnome -a <plugin_server_address> [optional args]
 ```
 
 #### Optional arguments:
@@ -48,7 +48,7 @@ $ nanome-postnome -a <plugin_server_address> [optional args]
 
 ### Docker Usage
 
-To run Postnome in a Docker container:
+To run Postgnome in a Docker container:
 
 ```sh
 $ cd docker
@@ -58,7 +58,7 @@ $ ./deploy.sh -a <plugin_server_address> [optional args]
 
 ### Development
 
-To run Postnome with autoreload:
+To run Postgnome with autoreload:
 
 ```sh
 $ python3 run.py -r -a <plugin_server_address> [optional args]

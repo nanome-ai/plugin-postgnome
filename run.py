@@ -1,4 +1,4 @@
-from nanome_postnome import Postnome
+from nanome_postgnome import Postgnome
 
 if __name__ == '__main__':
-    Postnome.main()
+    Postgnome.main()

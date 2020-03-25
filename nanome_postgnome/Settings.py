@@ -32,7 +32,7 @@ class Settings():
 
         self.count = 0
 
-        self.__settings_path = os.path.normpath(os.path.join(plugin.plugin_files_path, 'postnome', 'settings.json'))
+        self.__settings_path = os.path.normpath(os.path.join(plugin.plugin_files_path, 'postgnome', 'settings.json'))
         if not os.path.exists(os.path.dirname(self.__settings_path)):
             os.makedirs(os.path.dirname(self.__settings_path))
         self.load_settings()
@@ -60,7 +60,7 @@ class Settings():
         if not self.variable_values.get(var_value, None):
             self.variable_values[var_value] = []
 
-    
+
     def touch_variable(self, var_name, uid=None):
         if var_name not in self.variable_names:
             uid = uid or str(uuid.uuid1())
@@ -147,7 +147,7 @@ class Settings():
             acc   --  An optional accumulator function that takes one argument: the uid of a variable found within string.
             This function will be called once per variable found in string.
         """
-        def uuid_gen(var_name): 
+        def uuid_gen(var_name):
             uid = self.touch_variable(var_name)
             if acc is not None: acc(var_name, uid)
             return uid
@@ -171,10 +171,10 @@ class Settings():
             replacement = None
             for context in contexts:
                 replacement = context.get(m.group(1))
-                if type(replacement) is list: 
+                if type(replacement) is list:
                     replacement = replacement[use_index]
                 if replacement: break
-            if replacement: 
+            if replacement:
                 if reporter: reporter(m.group(1), replacement)
             else:
                 replacement = defaults_generator(m.group(1)) if defaults_generator else default_value
@@ -290,7 +290,7 @@ class Settings():
         elif type(ri) is str:
             return self.resources.get(ri, {})
         return {}
-    
+
     def get_resource_item(self, resource, item_name):
         """ Returns an item from a resource with named variables instead of uids
         """
@@ -307,7 +307,7 @@ class Settings():
             assigns this transformed item to the resource
         """
         uids = []
-        def uid_acc(name, uid): 
+        def uid_acc(name, uid):
             Logs.debug('item:', item)
             Logs.debug('uid:', uid)
             uids.append(uid)
@@ -355,7 +355,7 @@ class Settings():
             for name, value in resource['headers'].values():
                 self.generate_varname_string(name, acc)
                 self.generate_varname_string(value, acc)
-            
+
         output_vars = set(resource['output variables'].keys())
         print(f"output_vars: {output_vars}")
         print(f"input_vars: {input_vars}")
@@ -397,7 +397,7 @@ class Settings():
         del resource['header ids'][i]
         del resource['headers'][header_id]
         return True
-    
+
     def clear_output(self, resource, clear_headers=False):
         resource['output'] = ""
         if clear_headers:

@@ -3,4 +3,4 @@ __pycache__
 /build
 /dist
 docker/.cachebust
-nanome_postnome.egg-info
+nanome_postgnome.egg-info

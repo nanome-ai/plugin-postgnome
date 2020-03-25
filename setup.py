@@ -4,7 +4,7 @@ from setuptools import find_packages, setup
 README = (pathlib.Path(__file__).parent / 'README.md').read_text()
 
 setup(
-    name='nanome-postnome',
+    name='nanome-postgnome',
     packages=find_packages(),
     version='0.1.0',
     license='MIT',
@@ -13,11 +13,11 @@ setup(
     long_description_content_type='text/markdown',
     author='astrovicis',
     author_email='max@nanome.ai',
-    url='plugin-postnome',
+    url='plugin-postgnome',
     platforms='any',
     keywords=['virtual-reality', 'chemistry', 'python', 'api', 'plugin'],
     install_requires=['nanome'],
-    entry_points={'console_scripts': ['nanome-postnome = nanome_postnome.Postnome:main']},
+    entry_points={'console_scripts': ['nanome-postgnome = nanome_postgnome.Postgnome:main']},
     classifiers=[
         # 'Development Status :: 3 - Alpha',
 
@@ -33,6 +33,6 @@ setup(
         'Programming Language :: Python :: 3.8',
     ],
     package_data={
-        'nanome_postnome': []
+        'nanome_postgnome': []
     },
 )

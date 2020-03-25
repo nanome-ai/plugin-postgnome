@@ -18,7 +18,7 @@ from .menus.ResourcesMenu import ResourcesMenu
 from .menus.RequestsMenu import RequestsMenu
 
 MENU_PATH = os.path.join(os.path.dirname(__file__), 'json', 'MakeRequest.json')
-class Postnome(nanome.PluginInstance):
+class Postgnome(nanome.PluginInstance):
     def __init__(self):
         self.session = requests.Session()
         self.proxies = {
@@ -49,8 +49,8 @@ class Postnome(nanome.PluginInstance):
         self.resources_menu.open_menu()
 
 def main():
-    plugin = nanome.Plugin('Postnome', 'A web request plugin for Nanome', 'Loading', True)
-    plugin.set_plugin_class(Postnome)
+    plugin = nanome.Plugin('Postgnome', 'A web request plugin for Nanome', 'Loading', True)
+    plugin.set_plugin_class(Postgnome)
     plugin.run('127.0.0.1', 8888)
 
 if __name__ == '__main__':
