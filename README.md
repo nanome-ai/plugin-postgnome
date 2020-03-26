@@ -1,6 +1,8 @@
-# Nanome - Postgnome
+# Nanome - Postgnome 
 
-A web request plugin for Nanome
+<img src="images/postgnome.png" width="250">
+
+A web request plugin for Nanome.
 
 ### Preparation
 
