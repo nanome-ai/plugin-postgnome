@@ -7,7 +7,7 @@ Postgnome allows Nanome users to quickly and easily load data into Nanome from a
 Each configured endpoint, called a Resource, specifies an http request verb, headers, query parameters and post body data to be used when making a request. Additionally, each Resource can be configured to specify how it will import data into Nanome.
 Requests consist of one or more Resource firing steps for further flexibility in loading, storing, and passing along web-dependent data. One example of a multistep Request is passing an authorization token loaded from one Resource to another Resource that loads a structure into Nanome.
 
-Additionally, Postgnome works on a variable system; editable fields within the plugin may contain variables using {{a_variable}} syntax where "a_variable" is the name of the variable. This allows the underlying endpoints of Resources to remain independent of user-mutatable data, such as in https://files.rcsb.org/download/{{structure}}.pdb where "structure" will change depending on a specific Request being made.
+Additionally, Postgnome works on a variable system; Resource and Request text fields are allowed to contain variable strings using {{some_variable}} syntax where "some_variable" is the variable's name. This allows the endpoints of Resources to remain independent of Request specific data, such as in https://files.rcsb.org/download/{{structure}}.pdb where "structure" will change depending on the specific Request being made.
 
 ### Preparation
 
