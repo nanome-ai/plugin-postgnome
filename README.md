@@ -2,8 +2,6 @@
 
 <img src="images/postgnome.png" width="250">
 
-A web request plugin for Nanome.
-
 Postgnome allows Nanome users to quickly and easily load data into Nanome from arbitrary sets of web endpoints.
 
 Each configured endpoint, called a Resource, specifies an http request verb, headers, query parameters and post body data to be used when making a request. Additionally, each Resource can be configured to specify how it will import data into Nanome.
