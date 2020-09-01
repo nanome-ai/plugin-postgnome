@@ -2,5 +2,6 @@ __pycache__
 /.vscode
 /build
 /dist
-docker/.cachebust
-nanome_postgnome.egg-info
+/docker/.cachebust
+*.egg-info
+*.log
