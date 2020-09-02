@@ -51,8 +51,19 @@ class MakeRequestMenu():
         self.menu.enabled = True
         self.plugin.update_menu(self.menu)
 
+    def close_menu(self):
+        self.menu.enabled = False
+        self.plugin.update_menu(self.menu)
+
     def set_request(self, request):
+        if not request:
+            self.close_menu()
+            return
+        
+        if not self.menu.enabled:
+            self.open_menu()
         self.request = request
+        self.menu.title = request['name']
         self.show_request()
 
     def show_request(self):

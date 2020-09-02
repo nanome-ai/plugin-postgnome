@@ -60,7 +60,6 @@ class Settings():
         if not self.variable_values.get(var_value, None):
             self.variable_values[var_value] = []
 
-
     def touch_variable(self, var_name, uid=None):
         if var_name not in self.variable_names:
             uid = uid or str(uuid.uuid1())
@@ -227,7 +226,7 @@ class Settings():
         return {}
 
     def get_output_variable(self, resource, out_id):
-        """ Gets an output variable from a resource by an id
+        """ Gets an output variable from a resource by an output variable id
             Keyword arguments:
             resource -- the resource to get the output variable from
             out_id   -- the index or the uuid of the output variable to get
@@ -240,6 +239,9 @@ class Settings():
             return None, None
 
         if var_id in resource['output variables']:
+            if var_id not in self.variables:
+                del resource['output variables'][var_id]
+                return None
             if resource['output']:
                 # [ {{mol_name}}, {{proj_id}}, 1, MOLFILE]
                 output_var_path = resource['output variables'][var_id]

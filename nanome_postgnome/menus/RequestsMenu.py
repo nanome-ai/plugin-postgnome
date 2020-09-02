@@ -14,6 +14,7 @@ class RequestsMenu():
         self.plugin = plugin
         self.settings = settings
         self.menu = nanome.ui.Menu.io.from_json(MENU_PATH)
+        self.menu.register_closed_callback(self.open_menu)
         self.menu.index = 1
         self.config = RequestConfigurationMenu(self.plugin, self.settings)
 
@@ -23,7 +24,7 @@ class RequestsMenu():
         self.btn_new_request = self.menu.root.find_node("New Request").get_content()
         self.btn_new_request.register_pressed_callback(self.add_request)
 
-    def open_menu(self):
+    def open_menu(self, menu=None):
         self.refresh_requests()
         self.menu.enabled = True
         self.plugin.update_menu(self.menu)
@@ -59,9 +60,9 @@ class RequestsMenu():
         return self.settings.rename_request(request, new_name)
 
     def set_active_request(self, list_element, toggled):
+        self.plugin.make_request.set_request(self.settings.requests[list_element.r_id] if toggled else None)
         for item in self.requests_list.items:
                 item.set_use_externally(item is list_element and not toggled, update=False)
-        self.plugin.make_request.set_request(self.settings.requests[list_element.r_id] if toggled else None)
         return True
 
     def refresh_requests(self):
@@ -81,6 +82,9 @@ class RequestsMenu():
             )
             element.r_id = r_id
             element.set_tooltip("Set to active request")
-            if request['id'] is self.plugin.make_request.request['id']:
+            
+            main_request = self.plugin.make_request.request
+            if main_request and request['id'] is main_request['id']:
                 element.set_use_externally(True)
+            
             self.requests_list.items.append(element)

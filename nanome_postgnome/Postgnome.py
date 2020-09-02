@@ -32,14 +32,13 @@ class Postgnome(nanome.PluginInstance):
 
     def start(self):
         self.set_plugin_list_button(self.PluginListButtonType.run, 'Save')
-        self.set_plugin_list_button(self.PluginListButtonType.advanced_settings, 'Edit Resources')
+        self.set_plugin_list_button(self.PluginListButtonType.advanced_settings, 'Settings')
         if self.settings.request_ids:
-            self.make_request.request = self.settings.get_request(-1)
-            self.make_request.show_request()
-        self.make_request.open_menu()
+            self.make_request.set_request(self.settings.get_request(-1))
+        self.requests.open_menu()
 
     def on_run(self):
-        self.make_request.open_menu()
+        self.requests.open_menu()
         self.settings.save_settings()
 
     def on_stop(self):

@@ -46,25 +46,29 @@ class ListElement(nanome.ui.LayoutNode):
         self.ln_static_label = ln.find_node("Static Resource Label")
         self.lbl_resource = ln.find_node("Resource Label").get_content()
 
-        self.ln_name   = ln.find_node("Name")
+        self.ln_name = ln.find_node("Name")
         self.ln_name.add_new_label(name).text_horizontal_align = nanome.util.enums.HorizAlignOptions.Middle
 
         self.ln_rename = ln.find_node("Rename")
-        self.ln_rename.find_node("Image").add_new_image(IMG_RENAME_PATH)
-        self.ln_rename.get_content().register_pressed_callback(self.toggle_rename)
+        self.btn_rename = self.ln_rename.get_content()
+        self.btn_rename.icon.value.set_all(IMG_RENAME_PATH)
+        self.btn_rename.register_pressed_callback(self.toggle_rename)
 
         self.ln_value = ln.find_node("Resource")
         self.ln_value.add_new_label(value or '').text_horizontal_align = nanome.util.enums.HorizAlignOptions.Middle
 
-        self.ln_use_externally    = ln.find_node("Use Externally")
-        self.ln_use_externally.find_node("Image").add_new_image(IMG_UNCHECK_PATH)
-        self.ln_use_externally.get_content().register_pressed_callback(self.toggle_use_externally)
+        self.ln_use_externally = ln.find_node("Use Externally")
+        self.btn_use_externally = self.ln_use_externally.get_content()
+        self.btn_use_externally.icon.value.set_all(IMG_UNCHECK_PATH)
+        self.btn_use_externally.register_pressed_callback(self.toggle_use_externally)
 
         self.set_tooltip("Override resource data in request")
 
         self.ln_config = ln.find_node("Config")
-        self.ln_config.find_node("Image").add_new_image(IMG_CONFIG_PATH)
-        self.ln_config.get_content().register_pressed_callback(self.open_config)
+        self.btn_config = self.ln_config.get_content()
+        self.btn_config.icon.value.set_all(IMG_CONFIG_PATH)
+        self.btn_config.icon.value.selected = IMG_CHECK_PATH
+        self.btn_config.register_pressed_callback(self.open_config)
 
         self.configure_for_resource_type(value_display_type)
         self.set_externally_usable(externally_used)
@@ -82,7 +86,7 @@ class ListElement(nanome.ui.LayoutNode):
 
     def toggle_rename(self, button):
         button.selected = not button.selected
-        self.ln_rename.find_node("Image").add_new_image(IMG_CHECK_PATH if button.selected else IMG_RENAME_PATH)
+        self.btn_rename.icon.value.set_all(IMG_CHECK_PATH if button.selected else IMG_RENAME_PATH)
         if button.selected:
             name = self.ln_name.get_content().text_value
             text_input = self.ln_name.add_new_text_input()
@@ -178,8 +182,8 @@ class ListElement(nanome.ui.LayoutNode):
         self.plugin.update_node(self.ln_value)
 
     def set_use_externally(self, use, update=True):
-        self.ln_use_externally.find_node("Image").add_new_image(IMG_CHECK_PATH if use else IMG_UNCHECK_PATH)
-        self.ln_use_externally.get_content().selected = use
+        self.btn_use_externally.icon.value.set_all(IMG_CHECK_PATH if use else IMG_UNCHECK_PATH)
+        self.btn_use_externally.selected = use
         if update: self.plugin.update_content(self.ui_list)
 
     def toggle_use_externally(self, button):
@@ -187,7 +191,7 @@ class ListElement(nanome.ui.LayoutNode):
             self.set_use_externally(not button.selected)
 
     def set_renameable(self, is_renameable):
-        self.ln_rename.get_content().unusable = not is_renameable
+        self.btn_rename.unusable = not is_renameable
 
     def set_configurable(self, is_configurable):
         self.ln_config.get_content().unusable = not is_configurable
@@ -197,7 +201,7 @@ class ListElement(nanome.ui.LayoutNode):
         self.plugin.update_node(self.ln_use_externally)
 
     def set_tooltip(self, text):
-        button = self.ln_use_externally.get_content()
+        button = self.btn_use_externally
         button.tooltip.title = text
         button.tooltip.positioning_target = button.ToolTipPositioning.bottom
         button.tooltip.positioning_origin = button.ToolTipPositioning.top
