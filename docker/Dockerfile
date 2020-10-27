@@ -1,10 +1,8 @@
-FROM continuumio/miniconda3
+FROM nanome/plugin-env
 
 ENV ARGS=''
 
-RUN conda install -c openbabel openbabel
-RUN conda install -c rdkit rdkit
-RUN pip install requests xmltodict
+RUN pip install xmltodict
 RUN apt-get install nano
 
 ARG CACHEBUST
