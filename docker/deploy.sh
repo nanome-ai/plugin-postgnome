@@ -1,16 +1,20 @@
 #!/bin/bash
 
-if [ "$(docker ps -aq -f name=nanome-postgnome)" != "" ]; then
-    echo "removing exited container"
-    docker rm -f nanome-postgnome
+echo "./deploy.sh $*" > redeploy.sh
+chmod +x redeploy.sh
+
+existing=$(docker ps -aq -f name=postgnome)
+if [ -n "$existing" ]; then
+    echo "removing existing container"
+    docker rm -f $existing
 fi
 
 HOST=`ipconfig getifaddr en0`
 
 docker run -d \
---name nanome-postgnome \
+--name postgnome \
 --restart unless-stopped \
 -e ARGS="$*" \
 -e HOSTNAME=$HOST \
 -v postgnome-volume:/root \
-nanome-postgnome
+postgnome

@@ -50,7 +50,7 @@ class Postgnome(nanome.PluginInstance):
 def main():
     plugin = nanome.Plugin('Postgnome', 'A web request plugin for Nanome', 'Loading', True)
     plugin.set_plugin_class(Postgnome)
-    plugin.run('127.0.0.1', 8888)
+    plugin.run()
 
 if __name__ == '__main__':
     main()

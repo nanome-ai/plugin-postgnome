@@ -1,5 +1,5 @@
 #!/bin/bash
-name="nanome-postgnome"
+
 if [[ $(docker volume ls -f name=postgnome-volume -q) ]]; then
     echo "Skipping volume creation"
 else
@@ -20,6 +20,4 @@ if [ ! -f ".cachebust" ] || (($cachebust)); then
 fi
 
 cachebust=`cat .cachebust`
-docker build -f Dockerfile --build-arg CACHEBUST=$cachebust -t "$name:latest" ..
-
-echo $name
+docker build -f Dockerfile --build-arg CACHEBUST=$cachebust -t postgnome:latest ..

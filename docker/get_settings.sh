@@ -1,3 +1,3 @@
 #!/bin/bash
 
-docker cp nanome-postgnome:/root/Documents/nanome-plugins/postgnome/settings.json .
+docker cp postgnome:/root/Documents/nanome-plugins/postgnome/settings.json .
